@@ -1,0 +1,9 @@
+<div class="form-grid">
+    <div class="form-field full-field"><label for="name">Name <span>*</span></label><input id="name" name="name" value="{{ old('name', $client->name ?? '') }}" required autofocus>@error('name')<small class="field-error">{{ $message }}</small>@enderror</div>
+    <div class="form-field"><label for="company_name">Company name</label><input id="company_name" name="company_name" value="{{ old('company_name', $client->company_name ?? '') }}" placeholder="e.g. Acme Ltd.">@error('company_name')<small class="field-error">{{ $message }}</small>@enderror</div>
+    <div class="form-field"><label for="email">Email address</label><input id="email" name="email" type="email" value="{{ old('email', $client->email ?? '') }}" placeholder="name@example.com">@error('email')<small class="field-error">{{ $message }}</small>@enderror</div>
+    <div class="form-field"><label for="phone">Phone number</label><input id="phone" name="phone" value="{{ old('phone', $client->phone ?? '') }}" placeholder="+880 ...">@error('phone')<small class="field-error">{{ $message }}</small>@enderror</div>
+    <div class="form-field"><label for="address">Address</label><textarea id="address" name="address" rows="3" placeholder="Optional address">{{ old('address', $client->address ?? '') }}</textarea>@error('address')<small class="field-error">{{ $message }}</small>@enderror</div>
+    <div class="form-field"><label for="notes">Notes</label><textarea id="notes" name="notes" rows="3" placeholder="Anything useful to remember">{{ old('notes', $client->notes ?? '') }}</textarea>@error('notes')<small class="field-error">{{ $message }}</small>@enderror</div>
+    <label class="toggle-field"><input type="checkbox" name="is_active" value="1" {{ old('is_active', $client->is_active ?? true) ? 'checked' : '' }}><span><strong>Active client</strong><small>Keep this client available for future transactions.</small></span></label>
+</div>
