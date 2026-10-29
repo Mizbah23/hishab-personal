@@ -1,6 +1,17 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap');
 
 :root { --ink:#17211f; --muted:#77817d; --line:#e1e7e3; --paper:#f7f9f7; --card:#fff; --green:#2d6a58; --green-dark:#204d40; --mint:#dfeee7; --peach:#f7e8da; --gold:#e8c979; --shadow:0 18px 45px rgba(23,33,31,.06); }
+.movement-scroll { overflow-x:auto; padding:24px 0 12px; }
+.movement-scroll:focus-visible { outline:2px solid var(--green); outline-offset:4px; }
+.movement-chart { display:flex; gap:16px; min-width:100%; width:max-content; }
+.movement-month { width:132px; flex:1 0 132px; text-align:center; }
+.movement-bars { height:240px; display:flex; align-items:flex-end; justify-content:center; gap:16px; border-bottom:1px solid var(--line); background:repeating-linear-gradient(to top, transparent 0, transparent 59px, #edf0ee 59px, #edf0ee 60px); }
+.movement-column { height:100%; width:42px; display:flex; align-items:flex-end; }
+.movement-bar { width:100%; position:relative; border-radius:5px 5px 0 0; min-height:1px; }
+.movement-value { position:absolute; bottom:100%; left:50%; transform:translateX(-50%); padding-bottom:5px; font-size:10px; color:var(--ink); font-variant-numeric:tabular-nums; }
+.movement-label { display:block; margin-top:12px; font-size:12px; }
+.movement-net { display:block; margin-top:5px; color:#52615a; font-size:10px; }
+.movement-details { display:block; margin-top:8px; color:#77817d; font-size:10px; line-height:1.7; }
 .main-content, .report-columns > *, .report-stats > * { min-width:0; }
 .report-filters { flex-wrap:wrap; }
 .monthly-help { color:#65726c; font-size:12px; line-height:1.6; }

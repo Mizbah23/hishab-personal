@@ -25,20 +25,26 @@
     <section class="report-columns">
         <article class="content-card chart-card">
             <div class="card-header"><div><span class="panel-kicker">Period trend</span><h3>Monthly movement</h3></div><span class="chart-legend"><i class="legend-income"></i> Income <i class="legend-expense"></i> Expense</span></div>
-            <p class="monthly-help">Monthly totals in BDT. Bar lengths use the same scale for income and expenses.</p>
-            <div class="monthly-chart">
+            <p class="monthly-help">Monthly totals in BDT. Green: income · Orange: expenses. Scroll sideways to view more months.</p>
+            <div class="movement-scroll" tabindex="0" role="region" aria-label="Monthly income and expense bar chart">
+              <div class="movement-chart">
                 @foreach ($monthly as $month)
-                    <section class="monthly-row" aria-label="{{ $month['label'] }}">
-                        <div class="monthly-heading"><strong>{{ $month['label'] }}</strong><span>Net ৳ {{ number_format($month['income'] - $month['expense'], 2) }}</span></div>
+                    <section class="movement-month" aria-label="{{ $month['label'] }}">
+                      <div class="movement-bars">
                         @foreach (['income' => 'Income', 'expense' => 'Expense'] as $type => $label)
-                            <div class="monthly-series">
-                                <span>{{ $label }}</span>
-                                <div class="monthly-track" aria-hidden="true"><span class="{{ $type }}-bar" style="width:{{ round(($month[$type] / $peakAmount) * 100, 2) }}%"></span></div>
-                                <strong>৳ {{ number_format($month[$type], 2) }}</strong>
+                            <div class="movement-column">
+                                <span class="movement-bar {{ $type }}-bar" style="height:{{ round(($month[$type] / $peakAmount) * 100, 2) }}%" title="{{ $label }}: ৳ {{ number_format($month[$type], 2) }}">
+                                    <span class="movement-value">{{ number_format($month[$type], 0) }}</span>
+                                </span>
                             </div>
                         @endforeach
+                      </div>
+                      <strong class="movement-label">{{ $month['label'] }}</strong>
+                      <small class="movement-net">Net ৳ {{ number_format($month['income'] - $month['expense'], 2) }}</small>
+                      <span class="movement-details">Income ৳ {{ number_format($month['income'], 2) }}<br>Expense ৳ {{ number_format($month['expense'], 2) }}</span>
                     </section>
                 @endforeach
+              </div>
             </div>
             @if ($incomeCount === 0 && $expenseCount === 0)<p class="monthly-help">No transactions in this period.</p>@endif
         </article>
