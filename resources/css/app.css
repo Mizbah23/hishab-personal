@@ -133,6 +133,8 @@ a { color:inherit; text-decoration:none; }
 .table-avatar { width:31px; height:31px; border-radius:10px; display:grid; place-items:center; background:#e5efe9; color:#39715d; font-size:12px; font-weight:700; }
 .table-person strong, .table-contact { color:#33443c; font-size:11px; }
 .table-person small, .table-contact small { display:block; color:#a1aaa5; font-size:9px; margin-top:3px; }
+.website-link { display:grid; place-items:center; width:28px; height:28px; border:1px solid #d8e4de; border-radius:50%; background:#f8fbf9; color:#24694f; font-size:13px; text-decoration:none; transition:background .15s ease, border-color .15s ease, transform .15s ease; }
+.website-link:hover { background:#e5f2eb; border-color:#82b89d; transform:translateY(-1px); }
 .status-badge { border-radius:20px; padding:5px 9px; font-size:9px; }
 .active-badge { color:#33765c; background:#e2f2e9; } .inactive-badge { color:#8e8177; background:#f0ece8; }
 .table-date { color:#8d9993; font-size:10px; }

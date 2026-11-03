@@ -24,12 +24,14 @@
         @else
             <div class="table-wrap">
                 <table class="data-table">
-                    <thead><tr><th>Client</th><th>Contact</th><th>Status</th><th>Added</th>@if (auth()->user()->hasPermission('clients.manage'))<th></th>@endif</tr></thead>
+                    <thead><tr><th>Client</th><th>Contact</th><th>Tentative renewal</th><th>Website</th><th>Status</th><th>Added</th>@if (auth()->user()->hasPermission('clients.manage'))<th></th>@endif</tr></thead>
                     <tbody>
                         @foreach ($clients as $client)
                             <tr>
                                 <td><div class="table-person"><span class="table-avatar">{{ strtoupper(substr($client->name, 0, 1)) }}</span><span><strong>{{ $client->name }}</strong><small>{{ $client->company_name ?? 'Individual client' }}</small></span></div></td>
                                 <td><span class="table-contact">{{ $client->email ?? '—' }}<small>{{ $client->phone ?? 'No phone added' }}</small></span></td>
+                                <td><span class="table-contact">{{ $client->renewal_date?->format('d M Y') ?? 'Not scheduled' }}<small>{{ $client->renewal_amount !== null ? '৳ '.number_format((float) $client->renewal_amount, 2) : 'No amount set' }}</small></span></td>
+                                <td>@if ($client->url)<a class="website-link" href="{{ $client->url }}" target="_blank" rel="noopener noreferrer" title="Open {{ $client->name }} website" aria-label="Open {{ $client->name }} website">🌐</a>@else<span class="table-date">—</span>@endif</td>
                                 <td><span class="status-badge {{ $client->is_active ? 'active-badge' : 'inactive-badge' }}">{{ $client->is_active ? 'Active' : 'Inactive' }}</span></td>
                                 <td><span class="table-date">{{ $client->created_at->format('d M Y') }}</span></td>
                                 @if (auth()->user()->hasPermission('clients.manage'))<td><div class="row-actions"><a href="{{ route('admin.clients.edit', $client) }}">Edit</a><form method="POST" action="{{ route('admin.clients.destroy', $client) }}" onsubmit="return confirm('Remove this client?')">@csrf @method('DELETE')<button type="submit">Remove</button></form></div></td>@endif

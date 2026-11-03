@@ -25,6 +25,12 @@ class AdminClientTest extends TestCase
         $this->assertSame('https://example.com', $client->url);
         $this->assertSame('2027-01-15', $client->renewal_date->format('Y-m-d'));
         $this->assertSame('1500.50', $client->renewal_amount);
+
+        $this->actingAs($admin)->get(route('admin.clients.index'))
+            ->assertOk()
+            ->assertSee('15 Jan 2027')
+            ->assertSee('৳ 1,500.50')
+            ->assertSee('https://example.com', false);
     }
 
     public function test_pending_migration_blocks_work_until_admin_updates(): void
