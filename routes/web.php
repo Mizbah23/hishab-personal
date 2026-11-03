@@ -37,7 +37,10 @@ Route::post('/admin/database-update', [DatabaseUpdateController::class, 'store']
 Route::prefix('admin')->name('admin.')->middleware(['auth', EnsureDatabaseUpdated::class])->group(function (): void {
     Route::get('/dashboard', DashboardController::class)->middleware('permission:dashboard.view')->name('dashboard');
     Route::get('/progress', ProgressController::class)->middleware('permission:progress.view')->name('progress');
-    Route::get('/reports', ReportController::class)->middleware('permission:reports.view')->name('reports');
+    Route::get('/reports', [ReportController::class, 'overview'])->middleware('permission:reports.view')->name('reports');
+    Route::get('/reports/income', [ReportController::class, 'income'])->middleware('permission:reports.view')->name('reports.income');
+    Route::get('/reports/expense', [ReportController::class, 'expense'])->middleware('permission:reports.view')->name('reports.expense');
+    Route::get('/reports/ledger', [ReportController::class, 'ledger'])->middleware('permission:reports.view')->name('reports.ledger');
     Route::get('/activity', [ActivityController::class, 'index'])->middleware('permission:audit.view')->name('activity.index');
     Route::get('/backups', [BackupController::class, 'index'])->middleware('permission:backups.manage')->name('backups.index');
     Route::get('/backups/download', [BackupController::class, 'download'])->middleware('permission:backups.manage')->name('backups.download');

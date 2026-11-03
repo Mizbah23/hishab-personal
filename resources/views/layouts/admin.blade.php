@@ -22,9 +22,16 @@
             <a class="nav-link {{ request()->routeIs('admin.progress') ? 'active' : '' }}" href="{{ route('admin.progress') }}">
                 <span class="nav-icon">◌</span> Build progress
             </a>
-            <a class="nav-link {{ request()->routeIs('admin.reports') ? 'active' : '' }}" href="{{ route('admin.reports') }}">
-                <span class="nav-icon">▥</span> Reports
-            </a>
+            <details class="nav-dropdown" {{ request()->routeIs('admin.reports', 'admin.reports.*') ? 'open' : '' }}>
+                <summary class="nav-link {{ request()->routeIs('admin.reports', 'admin.reports.*') ? 'active' : '' }}">
+                    <span class="nav-icon">▥</span> Reports <span class="nav-chevron">⌄</span>
+                </summary>
+                <div class="nav-submenu">
+                    <a class="nav-submenu-link {{ request()->routeIs('admin.reports.income') ? 'active' : '' }}" href="{{ route('admin.reports.income') }}">Date-wise income</a>
+                    <a class="nav-submenu-link {{ request()->routeIs('admin.reports.expense') ? 'active' : '' }}" href="{{ route('admin.reports.expense') }}">Date-wise expense</a>
+                    <a class="nav-submenu-link {{ request()->routeIs('admin.reports.ledger') ? 'active' : '' }}" href="{{ route('admin.reports.ledger') }}">Date-wise ledger</a>
+                </div>
+            </details>
             <span class="nav-label">Manage</span>
             @if (auth()->user()->hasPermission('incomes.view'))<a class="nav-link {{ request()->routeIs('admin.incomes.*') ? 'active' : '' }}" href="{{ route('admin.incomes.index') }}"><span class="nav-icon">↗</span> Income</a>@endif
             @if (auth()->user()->hasPermission('expenses.view'))<a class="nav-link {{ request()->routeIs('admin.expenses.*') ? 'active' : '' }}" href="{{ route('admin.expenses.index') }}"><span class="nav-icon">↘</span> Expenses</a>@endif

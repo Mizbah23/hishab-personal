@@ -8,26 +8,19 @@ use App\Models\Income;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\View\View;
 
 class ReportController extends Controller
 {
-    public function __invoke(Request $request): View
+    public function overview(Request $request): View
     {
-        $filters = $request->validate([
-            'from' => ['nullable', 'date'],
-            'to' => ['nullable', 'date', 'after_or_equal:from'],
-        ]);
-
-        $from = Carbon::parse($filters['from'] ?? now()->startOfYear()->toDateString())->startOfDay();
-        $to = Carbon::parse($filters['to'] ?? now()->toDateString())->endOfDay();
+        [$from, $to] = $this->dateRange($request);
         $incomes = Income::query()
-            ->whereDate('received_on', '>=', $from->toDateString())
-            ->whereDate('received_on', '<=', $to->toDateString())
+            ->whereBetween('received_on', [$from->toDateString(), $to->toDateString()])
             ->get(['amount', 'received_on', 'category']);
         $expenses = Expense::query()
-            ->whereDate('spent_on', '>=', $from->toDateString())
-            ->whereDate('spent_on', '<=', $to->toDateString())
+            ->whereBetween('spent_on', [$from->toDateString(), $to->toDateString()])
             ->get(['amount', 'spent_on', 'category']);
 
         $incomeByMonth = $incomes->groupBy(fn (Income $income): string => $income->received_on->format('Y-m'));
@@ -50,9 +43,71 @@ class ReportController extends Controller
             ->map(fn ($items): float => (float) $items->sum('amount'))->sortDesc()->take(6);
         $categoryExpense = $expenses->groupBy(fn (Expense $expense): string => $expense->category ?: 'Uncategorised')
             ->map(fn ($items): float => (float) $items->sum('amount'))->sortDesc()->take(6);
+        $peakAmount = max(1, (float) $monthly->max(fn (array $month): float => max($month['income'], $month['expense'])));
+
+        return view('admin.reports', [
+            'from' => $from,
+            'to' => $to,
+            'monthly' => $monthly,
+            'incomeTotal' => $incomeTotal,
+            'expenseTotal' => $expenseTotal,
+            'balance' => $incomeTotal - $expenseTotal,
+            'incomeCount' => $incomes->count(),
+            'expenseCount' => $expenses->count(),
+            'categoryIncome' => $categoryIncome,
+            'categoryExpense' => $categoryExpense,
+            'peakAmount' => $peakAmount,
+        ]);
+    }
+
+    public function income(Request $request): View
+    {
+        [$from, $to] = $this->dateRange($request);
+        $incomes = Income::query()
+            ->whereBetween('received_on', [$from->toDateString(), $to->toDateString()])
+            ->get(['amount', 'received_on']);
+        $rows = $incomes->groupBy(fn (Income $income): string => $income->received_on->toDateString())
+            ->sortKeysDesc()
+            ->map(fn ($items, string $date): array => [
+                'date' => Carbon::parse($date),
+                'income' => (float) $items->sum('amount'),
+                'expense' => 0.0,
+                'transactions' => $items->count(),
+            ])->values();
+
+        return $this->dateWiseView('income', $from, $to, $rows, (float) $incomes->sum('amount'), $incomes->count());
+    }
+
+    public function expense(Request $request): View
+    {
+        [$from, $to] = $this->dateRange($request);
+        $expenses = Expense::query()
+            ->whereBetween('spent_on', [$from->toDateString(), $to->toDateString()])
+            ->get(['amount', 'spent_on']);
+        $rows = $expenses->groupBy(fn (Expense $expense): string => $expense->spent_on->toDateString())
+            ->sortKeysDesc()
+            ->map(fn ($items, string $date): array => [
+                'date' => Carbon::parse($date),
+                'income' => 0.0,
+                'expense' => (float) $items->sum('amount'),
+                'transactions' => $items->count(),
+            ])->values();
+
+        return $this->dateWiseView('expense', $from, $to, $rows, (float) $expenses->sum('amount'), $expenses->count());
+    }
+
+    public function ledger(Request $request): View
+    {
+        [$from, $to] = $this->dateRange($request);
+        $incomes = Income::query()
+            ->whereBetween('received_on', [$from->toDateString(), $to->toDateString()])
+            ->get(['amount', 'received_on']);
+        $expenses = Expense::query()
+            ->whereBetween('spent_on', [$from->toDateString(), $to->toDateString()])
+            ->get(['amount', 'spent_on']);
         $incomeByDate = $incomes->groupBy(fn (Income $income): string => $income->received_on->toDateString());
         $expenseByDate = $expenses->groupBy(fn (Expense $expense): string => $expense->spent_on->toDateString());
-        $daily = $incomeByDate->keys()
+        $rows = $incomeByDate->keys()
             ->merge($expenseByDate->keys())
             ->unique()
             ->sortDesc()
@@ -65,25 +120,31 @@ class ReportController extends Controller
                     'date' => Carbon::parse($date),
                     'income' => $income,
                     'expense' => $expense,
-                    'net' => $income - $expense,
                     'transactions' => $incomeByDate->get($date, collect())->count() + $expenseByDate->get($date, collect())->count(),
                 ];
             });
-        $peakAmount = max(1, (float) $monthly->max(fn (array $month): float => max($month['income'], $month['expense'])));
 
-        return view('admin.reports', [
-            'from' => $from,
-            'to' => $to,
-            'monthly' => $monthly,
-            'incomeTotal' => $incomeTotal,
-            'expenseTotal' => $expenseTotal,
-            'balance' => $incomeTotal - $expenseTotal,
-            'incomeCount' => $incomes->count(),
-            'expenseCount' => $expenses->count(),
-            'daily' => $daily,
-            'categoryIncome' => $categoryIncome,
-            'categoryExpense' => $categoryExpense,
-            'peakAmount' => $peakAmount,
+        return $this->dateWiseView('ledger', $from, $to, $rows, (float) $incomes->sum('amount') - (float) $expenses->sum('amount'), $incomes->count() + $expenses->count());
+    }
+
+    /**
+     * @return array{0: Carbon, 1: Carbon}
+     */
+    private function dateRange(Request $request): array
+    {
+        $filters = $request->validate([
+            'from' => ['nullable', 'date'],
+            'to' => ['nullable', 'date', 'after_or_equal:from'],
         ]);
+
+        return [
+            Carbon::parse($filters['from'] ?? now()->startOfYear()->toDateString())->startOfDay(),
+            Carbon::parse($filters['to'] ?? now()->toDateString())->endOfDay(),
+        ];
+    }
+
+    private function dateWiseView(string $report, Carbon $from, Carbon $to, Collection $rows, float $total, int $recordCount): View
+    {
+        return view('admin.reports.date-wise', compact('report', 'from', 'to', 'rows', 'total', 'recordCount'));
     }
 }
