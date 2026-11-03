@@ -47,6 +47,8 @@ jobs:
           cp artisan composer.json composer.lock .deploy-package/
       - name: Deploy over FTPS
         uses: SamKirkland/FTP-Deploy-Action@v4.4.0
+        env:
+          NODE_OPTIONS: --tls-max-v1.2
         with:
           server: ${{ secrets.PRODUCTION_FTP_HOST }}
           username: ${{ secrets.PRODUCTION_FTP_USERNAME }}
