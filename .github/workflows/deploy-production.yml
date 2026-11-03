@@ -23,8 +23,8 @@ jobs:
           BEFORE: ${{ github.event.before }}
           AFTER: ${{ github.sha }}
         run: |
-          if git diff --name-only "$BEFORE" "$AFTER" -- composer.lock database/migrations/ | grep -q .; then
-            echo 'Dependencies or migrations changed. Complete server maintenance, then run deployment manually.'
+          if git diff --name-only "$BEFORE" "$AFTER" -- composer.lock | grep -q .; then
+            echo 'Dependencies changed. Complete server dependency maintenance, then run deployment manually.'
             exit 1
           fi
       - uses: actions/setup-node@v6

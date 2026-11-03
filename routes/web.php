@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\ActivityController;
 use App\Http\Controllers\Admin\BackupController;
 use App\Http\Controllers\Admin\ClientController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\DatabaseUpdateController;
 use App\Http\Controllers\Admin\ExpenseController;
 use App\Http\Controllers\Admin\ExportController;
 use App\Http\Controllers\Admin\IncomeController;
@@ -12,6 +13,7 @@ use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\VoucherController;
 use App\Http\Controllers\AuthController;
+use App\Http\Middleware\EnsureDatabaseUpdated;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -29,7 +31,10 @@ Route::post('/logout', [AuthController::class, 'destroy'])
     ->middleware('auth')
     ->name('logout');
 
-Route::prefix('admin')->name('admin.')->middleware('auth')->group(function (): void {
+Route::get('/admin/database-update', [DatabaseUpdateController::class, 'index'])->middleware('auth')->name('admin.database-update');
+Route::post('/admin/database-update', [DatabaseUpdateController::class, 'store'])->middleware(['auth', 'admin', 'throttle:3,1'])->name('admin.database-update.store');
+
+Route::prefix('admin')->name('admin.')->middleware(['auth', EnsureDatabaseUpdated::class])->group(function (): void {
     Route::get('/dashboard', DashboardController::class)->middleware('permission:dashboard.view')->name('dashboard');
     Route::get('/progress', ProgressController::class)->middleware('permission:progress.view')->name('progress');
     Route::get('/reports', ReportController::class)->middleware('permission:reports.view')->name('reports');
