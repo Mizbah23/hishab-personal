@@ -26,10 +26,62 @@ class AdminReportTest extends TestCase
             ->assertSee('10,000.00')
             ->assertSee('2,500.00')
             ->assertSee('7,500.00')
-            ->assertSee('15 Jan 2026')
-            ->assertDontSee('15 Feb 2026')
             ->assertSee('Hosting')
-            ->assertSee('Retainer');
+            ->assertSee('Retainer')
+            ->assertDontSee('Date-wise movement');
+    }
+
+    public function test_date_wise_income_report_only_shows_income_in_the_selected_range(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        Income::create(['title' => 'January income', 'amount' => 10000, 'received_on' => '2026-01-15']);
+        Income::create(['title' => 'February income', 'amount' => 8000, 'received_on' => '2026-02-15']);
+        Expense::create(['title' => 'January expense', 'amount' => 2500, 'spent_on' => '2026-01-15']);
+
+        $this->actingAs($admin)->get(route('admin.reports.income', [
+            'from' => '2026-01-01',
+            'to' => '2026-01-31',
+        ]))->assertOk()
+            ->assertSee('Date-wise income')
+            ->assertSee('15 Jan 2026')
+            ->assertSee('10,000.00')
+            ->assertDontSee('8,000.00')
+            ->assertDontSee('2,500.00');
+    }
+
+    public function test_date_wise_expense_report_only_shows_expenses_in_the_selected_range(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        Expense::create(['title' => 'January expense', 'amount' => 2500, 'spent_on' => '2026-01-15']);
+        Expense::create(['title' => 'February expense', 'amount' => 1800, 'spent_on' => '2026-02-15']);
+        Income::create(['title' => 'January income', 'amount' => 10000, 'received_on' => '2026-01-15']);
+
+        $this->actingAs($admin)->get(route('admin.reports.expense', [
+            'from' => '2026-01-01',
+            'to' => '2026-01-31',
+        ]))->assertOk()
+            ->assertSee('Date-wise expense')
+            ->assertSee('15 Jan 2026')
+            ->assertSee('2,500.00')
+            ->assertDontSee('1,800.00')
+            ->assertDontSee('10,000.00');
+    }
+
+    public function test_date_wise_ledger_report_shows_income_expense_and_daily_net_balance(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        Income::create(['title' => 'January income', 'amount' => 10000, 'received_on' => '2026-01-15']);
+        Expense::create(['title' => 'January expense', 'amount' => 2500, 'spent_on' => '2026-01-15']);
+
+        $this->actingAs($admin)->get(route('admin.reports.ledger', [
+            'from' => '2026-01-01',
+            'to' => '2026-01-31',
+        ]))->assertOk()
+            ->assertSee('Date-wise ledger')
+            ->assertSee('15 Jan 2026')
+            ->assertSee('10,000.00')
+            ->assertSee('2,500.00')
+            ->assertSee('7,500.00');
     }
 
     public function test_report_rejects_an_invalid_date_range(): void
