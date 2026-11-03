@@ -1,0 +1,64 @@
+name: Deploy Hishab to cPanel
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: hishab-cpanel
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Check for server maintenance
+        if: github.event_name == 'push' && github.event.before != '0000000000000000000000000000000000000000'
+        env:
+          BEFORE: ${{ github.event.before }}
+          AFTER: ${{ github.sha }}
+        run: |
+          if git diff --name-only "$BEFORE" "$AFTER" -- composer.lock database/migrations/ | grep -q .; then
+            echo 'Dependencies or migrations changed. Complete server maintenance, then run deployment manually.'
+            exit 1
+          fi
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Build frontend
+        run: |
+          npm ci
+          npm run build
+      - name: Package runtime files
+        run: |
+          mkdir -p .deploy-package/bootstrap .deploy-package/database .deploy-package/resources
+          rsync -a app/ .deploy-package/app/
+          cp bootstrap/app.php bootstrap/providers.php .deploy-package/bootstrap/
+          rsync -a config/ .deploy-package/config/
+          rsync -a database/migrations/ .deploy-package/database/migrations/
+          rsync -a --exclude=hot --exclude=storage --exclude=.DS_Store public/ .deploy-package/public/
+          rsync -a resources/views/ .deploy-package/resources/views/
+          rsync -a routes/ .deploy-package/routes/
+          cp artisan composer.json composer.lock .deploy-package/
+      - name: Deploy over FTPS
+        uses: SamKirkland/FTP-Deploy-Action@v4.4.0
+        with:
+          server: ${{ secrets.PRODUCTION_FTP_HOST }}
+          username: ${{ secrets.PRODUCTION_FTP_USERNAME }}
+          password: ${{ secrets.PRODUCTION_FTP_PASSWORD }}
+          protocol: ftps
+          security: strict
+          port: 21
+          local-dir: ./.deploy-package/
+          server-dir: ./
+          state-name: .ftp-deploy-hishab-state.json
+          exclude: |
+            **/.env
+            **/storage/**
+            **/vendor/**
+            **/bootstrap/cache/**
