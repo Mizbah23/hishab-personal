@@ -70,6 +70,9 @@ class ClientController extends Controller
     {
         return $request->validate([
             'name' => ['required', 'string', 'max:255'],
+            'url' => ['nullable', 'url:http,https', 'max:2048'],
+            'renewal_date' => ['nullable', 'date'],
+            'renewal_amount' => ['nullable', 'numeric', 'min:0', 'max:9999999999999.99'],
             'company_name' => ['nullable', 'string', 'max:255'],
             'email' => ['nullable', 'email', 'max:255'],
             'phone' => ['nullable', 'string', 'max:30'],
