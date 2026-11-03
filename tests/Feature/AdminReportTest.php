@@ -26,6 +26,8 @@ class AdminReportTest extends TestCase
             ->assertSee('10,000.00')
             ->assertSee('2,500.00')
             ->assertSee('7,500.00')
+            ->assertSee('15 Jan 2026')
+            ->assertDontSee('15 Feb 2026')
             ->assertSee('Hosting')
             ->assertSee('Retainer');
     }
