@@ -22,6 +22,30 @@
         <article class="stat-card balance-card"><div class="stat-icon balance-icon">=</div><p>Net balance</p><strong>৳ {{ number_format($balance, 2) }}</strong><span class="stat-note">Income minus expenses</span></article>
     </section>
 
+    <section class="content-card report-ledger-card">
+        <div class="card-header"><div><span class="panel-kicker">Daily summary</span><h3>Date-wise movement</h3></div><span class="card-count">{{ $daily->count() }} {{ str('active date')->plural($daily->count()) }}</span></div>
+        @if ($daily->isNotEmpty())
+            <div class="table-wrap">
+                <table class="data-table report-ledger-table">
+                    <thead><tr><th>Date</th><th>Income</th><th>Expense</th><th>Net balance</th><th>Records</th></tr></thead>
+                    <tbody>
+                        @foreach ($daily as $day)
+                            <tr>
+                                <td><strong>{{ $day['date']->format('d M Y') }}</strong><small>{{ $day['date']->format('l') }}</small></td>
+                                <td><strong class="amount positive">+ ৳ {{ number_format($day['income'], 2) }}</strong></td>
+                                <td><strong class="amount negative">− ৳ {{ number_format($day['expense'], 2) }}</strong></td>
+                                <td><strong class="amount {{ $day['net'] < 0 ? 'negative' : 'positive' }}">{{ $day['net'] < 0 ? '−' : '+' }} ৳ {{ number_format(abs($day['net']), 2) }}</strong></td>
+                                <td><span class="table-date">{{ $day['transactions'] }} {{ str('record')->plural($day['transactions']) }}</span></td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        @else
+            <div class="empty-state report-empty"><span>◌</span><strong>No activity in this date range</strong><p>Income and expense totals will appear here once you add records.</p></div>
+        @endif
+    </section>
+
     <section class="report-columns">
         <article class="content-card chart-card">
             <div class="card-header"><div><span class="panel-kicker">Period trend</span><h3>Monthly movement</h3></div><span class="chart-legend"><i class="legend-income"></i> Income <i class="legend-expense"></i> Expense</span></div>

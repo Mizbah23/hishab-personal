@@ -50,6 +50,25 @@ class ReportController extends Controller
             ->map(fn ($items): float => (float) $items->sum('amount'))->sortDesc()->take(6);
         $categoryExpense = $expenses->groupBy(fn (Expense $expense): string => $expense->category ?: 'Uncategorised')
             ->map(fn ($items): float => (float) $items->sum('amount'))->sortDesc()->take(6);
+        $incomeByDate = $incomes->groupBy(fn (Income $income): string => $income->received_on->toDateString());
+        $expenseByDate = $expenses->groupBy(fn (Expense $expense): string => $expense->spent_on->toDateString());
+        $daily = $incomeByDate->keys()
+            ->merge($expenseByDate->keys())
+            ->unique()
+            ->sortDesc()
+            ->values()
+            ->map(function (string $date) use ($incomeByDate, $expenseByDate): array {
+                $income = (float) $incomeByDate->get($date, collect())->sum('amount');
+                $expense = (float) $expenseByDate->get($date, collect())->sum('amount');
+
+                return [
+                    'date' => Carbon::parse($date),
+                    'income' => $income,
+                    'expense' => $expense,
+                    'net' => $income - $expense,
+                    'transactions' => $incomeByDate->get($date, collect())->count() + $expenseByDate->get($date, collect())->count(),
+                ];
+            });
         $peakAmount = max(1, (float) $monthly->max(fn (array $month): float => max($month['income'], $month['expense'])));
 
         return view('admin.reports', [
@@ -61,6 +80,7 @@ class ReportController extends Controller
             'balance' => $incomeTotal - $expenseTotal,
             'incomeCount' => $incomes->count(),
             'expenseCount' => $expenses->count(),
+            'daily' => $daily,
             'categoryIncome' => $categoryIncome,
             'categoryExpense' => $categoryExpense,
             'peakAmount' => $peakAmount,
