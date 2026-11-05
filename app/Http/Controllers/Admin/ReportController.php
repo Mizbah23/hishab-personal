@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Expense;
 use App\Models\Income;
+use App\Models\Voucher;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Http\Request;
@@ -16,12 +17,8 @@ class ReportController extends Controller
     public function overview(Request $request): View
     {
         [$from, $to] = $this->dateRange($request);
-        $incomes = Income::query()
-            ->whereBetween('received_on', [$from->toDateString(), $to->toDateString()])
-            ->get(['amount', 'received_on', 'category']);
-        $expenses = Expense::query()
-            ->whereBetween('spent_on', [$from->toDateString(), $to->toDateString()])
-            ->get(['amount', 'spent_on', 'category']);
+        $incomes = Voucher::financialEntries('income', $from->toDateString(), $to->toDateString());
+        $expenses = Voucher::financialEntries('expense', $from->toDateString(), $to->toDateString());
 
         $incomeByMonth = $incomes->groupBy(fn (Income $income): string => $income->received_on->format('Y-m'));
         $expenseByMonth = $expenses->groupBy(fn (Expense $expense): string => $expense->spent_on->format('Y-m'));
@@ -63,9 +60,7 @@ class ReportController extends Controller
     public function income(Request $request): View
     {
         [$from, $to] = $this->dateRange($request);
-        $incomes = Income::query()
-            ->whereBetween('received_on', [$from->toDateString(), $to->toDateString()])
-            ->get(['amount', 'received_on']);
+        $incomes = Voucher::financialEntries('income', $from->toDateString(), $to->toDateString());
         $rows = $incomes->groupBy(fn (Income $income): string => $income->received_on->toDateString())
             ->sortKeysDesc()
             ->map(fn ($items, string $date): array => [
@@ -81,9 +76,7 @@ class ReportController extends Controller
     public function expense(Request $request): View
     {
         [$from, $to] = $this->dateRange($request);
-        $expenses = Expense::query()
-            ->whereBetween('spent_on', [$from->toDateString(), $to->toDateString()])
-            ->get(['amount', 'spent_on']);
+        $expenses = Voucher::financialEntries('expense', $from->toDateString(), $to->toDateString());
         $rows = $expenses->groupBy(fn (Expense $expense): string => $expense->spent_on->toDateString())
             ->sortKeysDesc()
             ->map(fn ($items, string $date): array => [
@@ -99,12 +92,8 @@ class ReportController extends Controller
     public function ledger(Request $request): View
     {
         [$from, $to] = $this->dateRange($request);
-        $incomes = Income::query()
-            ->whereBetween('received_on', [$from->toDateString(), $to->toDateString()])
-            ->get(['amount', 'received_on']);
-        $expenses = Expense::query()
-            ->whereBetween('spent_on', [$from->toDateString(), $to->toDateString()])
-            ->get(['amount', 'spent_on']);
+        $incomes = Voucher::financialEntries('income', $from->toDateString(), $to->toDateString());
+        $expenses = Voucher::financialEntries('expense', $from->toDateString(), $to->toDateString());
         $incomeByDate = $incomes->groupBy(fn (Income $income): string => $income->received_on->toDateString());
         $expenseByDate = $expenses->groupBy(fn (Expense $expense): string => $expense->spent_on->toDateString());
         $rows = $incomeByDate->keys()
