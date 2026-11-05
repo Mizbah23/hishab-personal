@@ -27,8 +27,10 @@ class DashboardController extends Controller
             $voucherQuery->whereBetween('voucher_date', [$from->toDateString(), $to->toDateString()]);
         }
 
-        $income = (float) (clone $incomeQuery)->sum('amount');
-        $expense = (float) (clone $expenseQuery)->sum('amount');
+        $incomeEntries = Voucher::financialEntries('income', $from?->toDateString(), $to?->toDateString());
+        $expenseEntries = Voucher::financialEntries('expense', $from?->toDateString(), $to?->toDateString());
+        $income = (float) $incomeEntries->sum('amount');
+        $expense = (float) $expenseEntries->sum('amount');
 
         return view('admin.dashboard', [
             'income' => $income,
@@ -36,8 +38,8 @@ class DashboardController extends Controller
             'balance' => $income - $expense,
             'clientCount' => Client::where('is_active', true)->count(),
             'voucherCount' => $voucherQuery->count(),
-            'incomeCount' => $incomeQuery->count(),
-            'expenseCount' => $expenseQuery->count(),
+            'incomeCount' => $incomeEntries->count(),
+            'expenseCount' => $expenseEntries->count(),
             'period' => $period,
             'periodLabel' => $periodLabel,
             'recentIncomes' => $incomeQuery->with('client')->latest('received_on')->latest()->limit(5)->get(),
@@ -47,7 +49,7 @@ class DashboardController extends Controller
 
     private function period(string $period): array
     {
-        $today = now();
+        $today = now()->toImmutable();
 
         return match ($period) {
             'month' => [$today->copy()->startOfMonth(), $today->copy()->endOfDay(), 'This month'],
