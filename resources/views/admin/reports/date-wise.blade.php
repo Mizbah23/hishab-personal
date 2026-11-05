@@ -33,7 +33,7 @@
         @if ($rows->isNotEmpty())
             <div class="table-wrap">
                 <table class="data-table report-ledger-table">
-                    <thead><tr><th>Date</th>@if ($report !== 'expense')<th>Income</th>@endif @if ($report !== 'income')<th>Expense</th>@endif @if ($report === 'ledger')<th>Net balance</th>@endif<th>Records</th></tr></thead>
+                    <thead><tr><th>Date</th>@if ($report !== 'expense')<th>Income</th>@endif @if ($report !== 'income')<th>Expense</th>@endif @if ($report === 'ledger')<th>Daily net balance</th>@endif<th>Records</th></tr></thead>
                     <tbody>
                         @foreach ($rows as $row)
                             <tr>
