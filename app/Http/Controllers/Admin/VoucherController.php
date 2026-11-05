@@ -7,6 +7,7 @@ use App\Models\Client;
 use App\Models\Voucher;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -42,12 +43,19 @@ class VoucherController extends Controller
 
     public function create(): View
     {
-        return view('admin.vouchers.create', ['clients' => $this->clients()]);
+        return view('admin.vouchers.create', [
+            'clients' => $this->clients(),
+            'voucherNumber' => Voucher::nextVoucherNumber(),
+        ]);
     }
 
     public function store(Request $request): RedirectResponse
     {
-        Voucher::create($this->validated($request) + ['created_by' => $request->user()->id]);
+        $data = $this->validated($request) + ['created_by' => $request->user()->id];
+        $data += $this->attachmentData($request);
+        $data['voucher_number'] = Voucher::nextVoucherNumber();
+
+        Voucher::create($data);
 
         return redirect()->route('admin.vouchers.index')->with('status', 'Voucher created successfully.');
     }
@@ -62,16 +70,35 @@ class VoucherController extends Controller
 
     public function update(Request $request, Voucher $voucher): RedirectResponse
     {
-        $voucher->update($this->validated($request, $voucher));
+        $data = $this->validated($request);
+        $attachment = $this->attachmentData($request);
+        $oldPath = $voucher->attachment_path;
+
+        $voucher->update($data + $attachment);
+
+        if ($attachment !== [] && $oldPath) {
+            Storage::disk('local')->delete($oldPath);
+        }
 
         return redirect()->route('admin.vouchers.index')->with('status', 'Voucher updated successfully.');
     }
 
     public function destroy(Voucher $voucher): RedirectResponse
     {
+        if ($voucher->attachment_path) {
+            Storage::disk('local')->delete($voucher->attachment_path);
+        }
+
         $voucher->delete();
 
         return redirect()->route('admin.vouchers.index')->with('status', 'Voucher removed successfully.');
+    }
+
+    public function downloadAttachment(Voucher $voucher)
+    {
+        abort_unless($voucher->attachment_path && Storage::disk('local')->exists($voucher->attachment_path), 404);
+
+        return Storage::disk('local')->download($voucher->attachment_path, $voucher->attachment_name);
     }
 
     private function clients()
@@ -79,19 +106,30 @@ class VoucherController extends Controller
         return Client::query()->where('is_active', true)->orderBy('name')->get();
     }
 
-    private function validated(Request $request, ?Voucher $voucher = null): array
+    private function validated(Request $request): array
     {
         return $request->validate([
-            'voucher_number' => [
-                'required', 'string', 'max:100',
-                Rule::unique('vouchers', 'voucher_number')->ignore($voucher),
-            ],
             'type' => ['required', Rule::in(['income', 'expense', 'general'])],
             'voucher_date' => ['required', 'date'],
             'amount' => ['required', 'numeric', 'min:0.01'],
             'status' => ['required', Rule::in(['draft', 'posted', 'cancelled'])],
             'narration' => ['nullable', 'string', 'max:255'],
             'client_id' => ['nullable', 'integer', 'exists:clients,id'],
+            'attachment' => ['nullable', 'file', 'max:2048', 'mimes:pdf,jpg,jpeg,png,webp,doc,docx,xls,xlsx'],
         ]);
+    }
+
+    private function attachmentData(Request $request): array
+    {
+        if (! $request->hasFile('attachment')) {
+            return [];
+        }
+
+        $file = $request->file('attachment');
+
+        return [
+            'attachment_path' => $file->store('attachments/vouchers', 'local'),
+            'attachment_name' => $file->getClientOriginalName(),
+        ];
     }
 }
