@@ -66,4 +66,5 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', EnsureDatabaseUpdate
 
     Route::resource('vouchers', VoucherController::class)->only(['index'])->middleware('permission:vouchers.view');
     Route::resource('vouchers', VoucherController::class)->except(['index', 'show'])->middleware('permission:vouchers.manage');
+    Route::get('/vouchers/{voucher}/attachment', [VoucherController::class, 'downloadAttachment'])->middleware('permission:vouchers.view')->name('vouchers.attachment');
 });

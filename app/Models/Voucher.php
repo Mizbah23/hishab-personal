@@ -12,7 +12,7 @@ class Voucher extends Model
 
     protected $fillable = [
         'voucher_number', 'type', 'voucher_date', 'amount', 'status',
-        'narration', 'client_id', 'created_by',
+        'narration', 'client_id', 'created_by', 'attachment_path', 'attachment_name',
     ];
 
     protected function casts(): array
@@ -23,5 +23,17 @@ class Voucher extends Model
     public function client()
     {
         return $this->belongsTo(Client::class);
+    }
+
+    public static function nextVoucherNumber(): string
+    {
+        $timestamp = now();
+
+        do {
+            $voucherNumber = $timestamp->format('YmdGi').$timestamp->second;
+            $timestamp->addSecond();
+        } while (static::query()->where('voucher_number', $voucherNumber)->exists());
+
+        return $voucherNumber;
     }
 }
