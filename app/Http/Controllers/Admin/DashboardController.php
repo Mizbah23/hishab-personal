@@ -31,8 +31,23 @@ class DashboardController extends Controller
         $expenseEntries = Voucher::financialEntries('expense', $from?->toDateString(), $to?->toDateString());
         $income = (float) $incomeEntries->sum('amount');
         $expense = (float) $expenseEntries->sum('amount');
+        $today = now()->toImmutable();
+        $chartFrom = $today->startOfYear()->min($today->startOfMonth()->subMonths(2));
+        $chartIncome = Voucher::financialEntries('income', $chartFrom->toDateString(), $today->toDateString())->groupBy(fn ($entry) => $entry->received_on->format('Y-m'));
+        $chartExpense = Voucher::financialEntries('expense', $chartFrom->toDateString(), $today->toDateString())->groupBy(fn ($entry) => $entry->spent_on->format('Y-m'));
+        $recentMonths = collect(range(2, 0))->map(function (int $offset) use ($today, $chartIncome, $chartExpense): array {
+            $month = $today->startOfMonth()->subMonths($offset);
+            $income = (float) $chartIncome->get($month->format('Y-m'), collect())->sum('amount');
+            $expense = (float) $chartExpense->get($month->format('Y-m'), collect())->sum('amount');
+
+            return ['label' => $month->format('M Y'), 'income' => $income, 'expense' => $expense, 'net' => $income - $expense];
+        });
+        $yearIncome = collect(range(1, 12))->map(fn (int $month): array => ['label' => $today->month($month)->format('M'), 'amount' => (float) $chartIncome->get($today->month($month)->format('Y-m'), collect())->sum('amount')]);
 
         return view('admin.dashboard', [
+            'recentMonths' => $recentMonths,
+            'yearIncome' => $yearIncome,
+            'chartYear' => $today->year,
             'income' => $income,
             'expense' => $expense,
             'balance' => $income - $expense,

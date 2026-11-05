@@ -43,6 +43,38 @@
         </article>
     </section>
 
+    @php
+        $barPeak = max(1, $recentMonths->max(fn ($month) => max($month['income'], $month['expense'], abs($month['net']))));
+        $linePeak = max(1, $yearIncome->max('amount'));
+    @endphp
+    <section class="dashboard-columns financial-charts">
+        <article class="content-card">
+            <div class="card-header"><h3>Last 3 months</h3><span class="card-count">Current month to date · BDT</span></div>
+            <div class="quarter-chart">
+                @foreach ($recentMonths as $month)
+                    <div class="quarter-month"><strong>{{ $month['label'] }}</strong>
+                        @foreach (['income' => 'Income', 'expense' => 'Expense', 'net' => 'Net balance'] as $key => $label)
+                            <div class="quarter-series"><span>{{ $label }}</span><div class="quarter-track"><i class="series-{{ $key }} {{ $month[$key] < 0 ? 'series-loss' : '' }}" style="width:{{ abs($month[$key]) / $barPeak * 100 }}%"></i></div><strong>৳ {{ number_format($month[$key], 2) }}</strong></div>
+                        @endforeach
+                    </div>
+                @endforeach
+            </div>
+        </article>
+        <article class="content-card">
+            <div class="card-header"><h3>{{ $chartYear }} income</h3><span class="card-count">Monthly totals · BDT</span></div>
+            <div class="income-line-scroll">
+                <svg class="income-line" viewBox="0 0 640 260" role="img" aria-label="Current year monthly income line chart">
+                    <line x1="35" y1="215" x2="610" y2="215" stroke="#dce5df" />
+                    <polyline fill="none" stroke="#2d8061" stroke-width="3" points="@foreach ($yearIncome as $point){{ 40 + $loop->index * 51 }},{{ 215 - $point['amount'] / $linePeak * 165 }} @endforeach" />
+                    @foreach ($yearIncome as $point)
+                        <circle cx="{{ 40 + $loop->index * 51 }}" cy="{{ 215 - $point['amount'] / $linePeak * 165 }}" r="4" fill="#2d8061"><title>{{ $point['label'] }}: ৳ {{ number_format($point['amount'], 2) }}</title></circle>
+                        <text x="{{ 40 + $loop->index * 51 }}" y="240" text-anchor="middle" font-size="11" fill="#65716b">{{ $point['label'] }}</text>
+                    @endforeach
+                </svg>
+            </div>
+            <details><summary>View exact monthly amounts</summary><div class="income-month-values">@foreach ($yearIncome as $point)<span>{{ $point['label'] }}: ৳ {{ number_format($point['amount'], 2) }}</span>@endforeach</div></details>
+        </article>
+    </section>
     <section class="dashboard-columns">
         <article class="content-card">
             <div class="card-header">
@@ -77,16 +109,7 @@
         </article>
     </section>
 
-    <section class="content-card quick-actions-card">
-        <div><span class="panel-kicker">Shortcuts</span><h3>Keep the books current.</h3></div>
-        <div class="quick-actions">
-            @if (auth()->user()->hasPermission('incomes.manage'))<a class="quick-action income-quick" href="{{ route('admin.incomes.create') }}"><span>↗</span> Record income</a>@endif
-            @if (auth()->user()->hasPermission('expenses.manage'))<a class="quick-action expense-quick" href="{{ route('admin.expenses.create') }}"><span>↘</span> Record expense</a>@endif
-            @if (auth()->user()->hasPermission('vouchers.manage'))<a class="quick-action voucher-quick" href="{{ route('admin.vouchers.create') }}"><span>▤</span> Add voucher</a>@endif
-            @if (auth()->user()->hasPermission('clients.manage'))<a class="quick-action client-quick" href="{{ route('admin.clients.create') }}"><span>◎</span> Add client</a>@endif
-            @if (! auth()->user()->hasPermission('incomes.manage') && ! auth()->user()->hasPermission('expenses.manage'))<span class="read-only-note">Your Viewer role has read-only access to the workspace.</span>@endif
-        </div>
-    </section>
+
 
     <section class="setup-card">
         <div class="setup-number">01</div>
