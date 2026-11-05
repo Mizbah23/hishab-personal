@@ -8,7 +8,8 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="app-shell">
-    <aside class="sidebar">
+    <header class="mobile-header"><a href="{{ route('admin.dashboard') }}">Hishab</a><button type="button" class="mobile-menu-toggle" aria-controls="admin-sidebar" aria-expanded="false">☰ <span>Menu</span></button></header>
+    <aside class="sidebar" id="admin-sidebar">
         <a class="brand" href="{{ route('admin.dashboard') }}">
             <img class="brand-logo" src="{{ asset('images/hishab-logo.png') }}" alt="Hishab logo">
             <span><strong>Hishab</strong><small>Personal accounts</small></span>
