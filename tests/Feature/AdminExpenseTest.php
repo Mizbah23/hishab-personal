@@ -11,6 +11,24 @@ class AdminExpenseTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_expense_create_form_offers_category_choices(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        $this->actingAs($admin)->get(route('admin.expenses.create'))
+            ->assertSee('<select id="category" name="category">', false)
+            ->assertSeeInOrder(['ChatGPT Purchase', 'Mobile Balance', 'Accessories', 'Domain Purchase', 'Domain & Hosting', 'Others']);
+    }
+
+    public function test_expense_edit_form_keeps_a_legacy_category_selected(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $expense = Expense::create(['title' => 'Old expense', 'amount' => 100, 'spent_on' => '2026-08-01', 'category' => 'Hosting']);
+
+        $this->actingAs($admin)->get(route('admin.expenses.edit', $expense))
+            ->assertSee('<option value="Hosting" selected>Hosting</option>', false);
+    }
+
     public function test_admin_can_record_an_expense(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
