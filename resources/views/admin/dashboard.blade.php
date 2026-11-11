@@ -45,7 +45,16 @@
 
     @php
         $barPeak = max(1, $recentMonths->max(fn ($month) => max($month['income'], $month['expense'], abs($month['net']))));
-        $linePeak = max(1, $yearIncome->max('amount'));
+        $targetStep = max(1, $yearIncome->max('amount') / 5);
+        $magnitude = 10 ** floor(log10($targetStep));
+        $lineStep = ceil($targetStep / $magnitude) * $magnitude;
+        $linePeak = $lineStep * 5;
+        $linePoints = $yearIncome->values()->map(fn ($point, $index) => [
+            ...$point,
+            'x' => 80 + $index * 48,
+            'y' => 225 - $point['amount'] / $linePeak * 180,
+        ]);
+        $linePath = $linePoints->map(fn ($point) => $point['x'].','.$point['y'])->implode(' ');
     @endphp
     <section class="dashboard-columns financial-charts">
         <article class="content-card">
@@ -60,15 +69,22 @@
                 @endforeach
             </div>
         </article>
-        <article class="content-card">
-            <div class="card-header"><h3>{{ $chartYear }} income</h3><span class="card-count">Monthly totals · BDT</span></div>
-            <div class="income-line-scroll">
-                <svg class="income-line" viewBox="0 0 640 260" role="img" aria-label="Current year monthly income line chart">
-                    <line x1="35" y1="215" x2="610" y2="215" stroke="#dce5df" />
-                    <polyline fill="none" stroke="#2d8061" stroke-width="3" points="@foreach ($yearIncome as $point){{ 40 + $loop->index * 51 }},{{ 215 - $point['amount'] / $linePeak * 165 }} @endforeach" />
-                    @foreach ($yearIncome as $point)
-                        <circle cx="{{ 40 + $loop->index * 51 }}" cy="{{ 215 - $point['amount'] / $linePeak * 165 }}" r="4" fill="#2d8061"><title>{{ $point['label'] }}: ৳ {{ number_format($point['amount'], 2) }}</title></circle>
-                        <text x="{{ 40 + $loop->index * 51 }}" y="240" text-anchor="middle" font-size="11" fill="#65716b">{{ $point['label'] }}</text>
+        <article class="content-card annual-income-card">
+            <div class="card-header"><div><span class="panel-kicker">Monthly income</span><h3>{{ $chartYear }} income</h3></div><strong>৳ {{ number_format($yearIncome->sum('amount'), 2) }}</strong></div>
+            <div class="income-line-scroll" tabindex="0" role="region" aria-label="Monthly income chart">
+                <svg class="income-line" viewBox="0 0 640 260" role="img" aria-label="Current year monthly income line chart in BDT">
+                    <defs><linearGradient id="annual-income-fill" x2="0" y2="1"><stop stop-color="#5ba98b" stop-opacity=".29"/><stop offset="100%" stop-color="#5ba98b" stop-opacity=".02"/></linearGradient></defs>
+                    <text x="80" y="22" class="income-axis-label">Income (BDT)</text>
+                    @for ($tick = 0; $tick <= 5; $tick++)
+                        <line x1="75" y1="{{ 225 - 36 * $tick }}" x2="608" y2="{{ 225 - 36 * $tick }}" class="income-gridline" />
+                        <text x="68" y="{{ 225 - 36 * $tick }}" text-anchor="end" dominant-baseline="middle" class="income-axis-label">{{ number_format($tick * $lineStep) }}</text>
+                    @endfor
+                    <path d="M80 45 V225 H608" class="income-axis" />
+                    <polygon points="80,225 {{ $linePath }} 608,225" fill="url(#annual-income-fill)" />
+                    <polyline fill="none" stroke="#267657" stroke-width="3" stroke-linejoin="round" points="{{ $linePath }}" />
+                    @foreach ($linePoints as $point)
+                        <circle cx="{{ $point['x'] }}" cy="{{ $point['y'] }}" r="4.5" fill="#267657" stroke="white" stroke-width="2"><title>{{ $point['label'] }}: ৳ {{ number_format($point['amount'], 2) }}</title></circle>
+                        <text x="{{ $point['x'] }}" y="248" text-anchor="middle" class="income-axis-label">{{ $point['label'] }}</text>
                     @endforeach
                 </svg>
             </div>

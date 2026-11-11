@@ -34,7 +34,9 @@ class AdminAccessTest extends TestCase
         $this->get(route('admin.dashboard'))
             ->assertOk()
             ->assertSee('Financial overview')
-            ->assertSee('Total income');
+            ->assertSee('Total income')
+            ->assertSee('Income (BDT)')
+            ->assertSee('View exact monthly amounts');
     }
 
     public function test_dashboard_period_filter_limits_financial_summary(): void

@@ -198,6 +198,14 @@ a { color:inherit; text-decoration:none; }
 .quarter-track i { display:block; height:100%; }
 .series-income { background:#5b9a7b; } .series-expense { background:#d69771; } .series-net { background:#6b83b4; } .series-loss { background:#ba514b; }
 .income-line-scroll { overflow-x:auto; } .income-line { width:100%; min-width:500px; display:block; }
+.annual-income-card { min-width:0; padding-bottom:18px; }
+.annual-income-card .card-header { align-items:center; }
+.annual-income-card .card-header > strong { color:var(--green-dark); font-size:clamp(16px, 2vw, 24px); overflow-wrap:anywhere; }
+.annual-income-card .income-line-scroll { margin:14px 0; border-radius:12px; background:#f8fbf9; }
+.income-axis-label { fill:#4f625a; font-size:12px; font-variant-numeric:tabular-nums; }
+.income-gridline { stroke:#dce8e1; stroke-dasharray:3 4; }
+.income-axis { fill:none; stroke:#9bafa4; }
+.annual-income-card summary { color:var(--green-dark); cursor:pointer; font-size:12px; }
 .income-month-values { display:flex; flex-wrap:wrap; gap:12px; padding:16px 0; font-size:12px; }
 @media(max-width:480px) { .quarter-series { grid-template-columns:1fr auto; } .quarter-track { grid-row:2; grid-column:1 / -1; } }
 .mobile-header { display:none; }
