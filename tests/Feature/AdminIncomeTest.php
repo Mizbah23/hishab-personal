@@ -12,6 +12,24 @@ class AdminIncomeTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_income_create_form_offers_category_choices(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        $this->actingAs($admin)->get(route('admin.incomes.create'))
+            ->assertSee('<select id="category" name="category">', false)
+            ->assertSeeInOrder(['Software Sell', 'Renew', 'Domain Sell', 'Point Sell', 'Others']);
+    }
+
+    public function test_income_edit_form_keeps_a_legacy_category_selected(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $income = Income::create(['title' => 'Old income', 'amount' => 100, 'received_on' => '2026-08-01', 'category' => 'Retainer']);
+
+        $this->actingAs($admin)->get(route('admin.incomes.edit', $income))
+            ->assertSee('<option value="Retainer" selected>Retainer</option>', false);
+    }
+
     public function test_admin_can_record_income_for_a_client(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
