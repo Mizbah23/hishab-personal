@@ -16,7 +16,10 @@
         th, td { padding:12px 6px; text-align:left; border-bottom:1px solid #dde7e1; }
         th:last-child, td:last-child { width:40%; text-align:right; }
         button { padding:10px 14px; color:white; background:#2d6a58; border:0; border-radius:6px; cursor:pointer; font:inherit; }
-        @media print { body { background:white; } main { margin:0; padding:0; } nav { display:none; } tr { break-inside:avoid; } }
+        .invoice-issuer { margin-left:auto; text-align:right; }
+        .invoice-qr { display:block; margin:8px 0 0 auto; }
+        @page { margin:0; }
+        @media print { body { background:white; } main { margin:0; padding:14mm; } nav { display:none; } header, tr { break-inside:avoid; } }
     </style>
 </head>
 <body>
@@ -27,7 +30,11 @@
     </nav>
     <header>
         <div><h1>Invoice</h1><p>{{ $invoiceNumber }}</p></div>
-        <div><strong>Uddog Soft Inc.</strong><p>{{ $income->due_amount > 0 ? 'Sale recorded' : 'Paid' }} {{ $income->received_on->format('d M Y') }}</p></div>
+        <div class="invoice-issuer">
+            <strong>Uddog Soft Inc.</strong>
+            <p>{{ $income->due_amount > 0 ? 'Sale recorded' : 'Paid' }} {{ $income->received_on->format('d M Y') }}</p>
+            <img class="invoice-qr" src="{{ asset('images/uddog-soft-invoice-qr.png') }}" width="104" height="104" alt="QR code for uddog-soft.com">
+        </div>
     </header>
     <section aria-label="Client details">
         <h2>Bill to</h2>
