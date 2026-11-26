@@ -59,6 +59,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', EnsureDatabaseUpdate
     Route::resource('incomes', IncomeController::class)->only(['index'])->middleware('permission:incomes.view');
     Route::resource('incomes', IncomeController::class)->except(['index', 'show'])->middleware('permission:incomes.manage');
     Route::get('/incomes/{income}/attachment', [IncomeController::class, 'downloadAttachment'])->middleware('permission:incomes.view')->name('incomes.attachment');
+    Route::get('/incomes/{income}/invoice', [IncomeController::class, 'invoice'])->middleware('permission:incomes.view')->name('incomes.invoice');
 
     Route::resource('expenses', ExpenseController::class)->only(['index'])->middleware('permission:expenses.view');
     Route::resource('expenses', ExpenseController::class)->except(['index', 'show'])->middleware('permission:expenses.manage');
