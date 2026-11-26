@@ -20,6 +20,7 @@ class AdminIncomeTest extends TestCase
         $this->actingAs($admin)->post(route('admin.incomes.store'), [
             'title' => 'Website renewal',
             'amount' => '1234.50',
+            'due_amount' => '500.00',
             'received_on' => '2026-11-26',
             'client_id' => $client->id,
         ])->assertRedirect(route('admin.incomes.index'));
@@ -30,6 +31,10 @@ class AdminIncomeTest extends TestCase
             ->assertSee('Invoice Client')
             ->assertSee('Website renewal')
             ->assertSee('BDT 1,234.50')
+            ->assertSee('Uddog Soft Inc.')
+            ->assertSee('BDT 1,734.50')
+            ->assertSee('Balance due')
+            ->assertSee('BDT 500.00')
             ->assertSee('Print / Save as PDF');
     }
 

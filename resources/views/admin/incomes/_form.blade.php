@@ -1,6 +1,12 @@
 <div class="form-grid">
     <div class="form-field full-field"><label for="title">Income title <span>*</span></label><input id="title" name="title" value="{{ old('title', $income->title ?? '') }}" placeholder="e.g. Website project payment" required autofocus>@error('title')<small class="field-error">{{ $message }}</small>@enderror</div>
-    <div class="form-field"><label for="amount">Amount (BDT) <span>*</span></label><input id="amount" name="amount" type="number" min="0.01" step="0.01" value="{{ old('amount', $income->amount ?? '') }}" placeholder="0.00" required>@error('amount')<small class="field-error">{{ $message }}</small>@enderror</div>
+    <div class="form-field"><label for="amount">Amount received (BDT) <span>*</span></label><input id="amount" name="amount" type="number" min="0" step="0.01" value="{{ old('amount', $income->amount ?? '') }}" placeholder="0.00" required>@error('amount')<small class="field-error">{{ $message }}</small>@enderror</div>
+    <div class="form-field">
+        <label for="due_amount">Due sale · Outstanding amount (BDT)</label>
+        <input id="due_amount" name="due_amount" type="number" min="0" step="0.01" value="{{ old('due_amount', $income->due_amount ?? '') }}" placeholder="0.00">
+        <small class="file-hint">Enter the unpaid portion. For a fully unpaid sale, enter 0 as the amount received.</small>
+        @error('due_amount')<small class="field-error">{{ $message }}</small>@enderror
+    </div>
     <div class="form-field"><label for="received_on">Received date <span>*</span></label><input id="received_on" name="received_on" type="date" value="{{ old('received_on', isset($income) ? $income->received_on->format('Y-m-d') : now()->format('Y-m-d')) }}" required>@error('received_on')<small class="field-error">{{ $message }}</small>@enderror</div>
     <div class="form-field"><label for="client_id">Client</label><select id="client_id" name="client_id"><option value="">No client linked</option>@foreach ($clients as $client)<option value="{{ $client->id }}" {{ (string) old('client_id', $income->client_id ?? '') === (string) $client->id ? 'selected' : '' }}>{{ $client->name }}{{ $client->company_name ? ' · '.$client->company_name : '' }}</option>@endforeach</select>@error('client_id')<small class="field-error">{{ $message }}</small>@enderror</div>
     @php
