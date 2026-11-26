@@ -26,7 +26,9 @@
                             <span class="table-date">{{ $income->received_on->format('d M Y') }}</span>
                             @if ($income->client_id)<br><a class="attachment-link" href="{{ route('admin.incomes.invoice', $income) }}">Invoice</a>@endif
                         </td>
-                        <td><strong class="amount positive">+ ৳ {{ number_format((float) $income->amount, 2) }}</strong></td>
+                        <td><strong class="amount positive">+ ৳ {{ number_format((float) $income->amount, 2) }}</strong>
+                            @if ($income->due_amount > 0)<br><span>Due ৳ {{ number_format((float) $income->due_amount, 2) }}</span>@endif
+                        </td>
                         <td>@if ($income->attachment_path)<a class="attachment-link" href="{{ route('admin.incomes.attachment', $income) }}">📎 View file</a>@else<span class="table-date">—</span>@endif</td>
                         @if (auth()->user()->hasPermission('incomes.manage'))<td><div class="row-actions"><a href="{{ route('admin.incomes.edit', $income) }}">Edit</a><form method="POST" action="{{ route('admin.incomes.destroy', $income) }}" onsubmit="return confirm('Remove this income record?')">@csrf @method('DELETE')<button type="submit">Remove</button></form></div></td>@endif
                     </tr>

@@ -119,7 +119,8 @@ class IncomeController extends Controller
     {
         return $request->validate([
             'title' => ['required', 'string', 'max:255'],
-            'amount' => ['required', 'numeric', 'min:0.01'],
+            'amount' => ['required', 'numeric', is_numeric($request->input('due_amount')) && $request->input('due_amount') >= 0.01 ? 'min:0' : 'min:0.01'],
+            'due_amount' => ['nullable', 'numeric', 'decimal:0,2', 'min:0', 'max:9999999999999.99'],
             'received_on' => ['required', 'date'],
             'category' => ['nullable', 'string', 'max:100'],
             'payment_method' => ['nullable', 'string', 'max:100'],

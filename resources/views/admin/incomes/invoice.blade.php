@@ -27,7 +27,7 @@
     </nav>
     <header>
         <div><h1>Invoice</h1><p>{{ $invoiceNumber }}</p></div>
-        <div><strong>{{ config('app.name') }}</strong><p>Paid {{ $income->received_on->format('d M Y') }}</p></div>
+        <div><strong>Uddog Soft Inc.</strong><p>{{ $income->due_amount > 0 ? 'Sale recorded' : 'Paid' }} {{ $income->received_on->format('d M Y') }}</p></div>
     </header>
     <section aria-label="Client details">
         <h2>Bill to</h2>
@@ -37,8 +37,16 @@
     </section>
     <table>
         <thead><tr><th scope="col">Description</th><th scope="col">Amount (BDT)</th></tr></thead>
-        <tbody><tr><td>{{ $income->title }}</td><td>{{ number_format((float) $income->amount, 2) }}</td></tr></tbody>
-        <tfoot><tr><th scope="row">Total paid</th><td><strong>BDT {{ number_format((float) $income->amount, 2) }}</strong></td></tr></tfoot>
+        <tbody><tr><td>{{ $income->title }}</td><td>{{ number_format((float) $income->amount + (float) $income->due_amount, 2) }}</td></tr></tbody>
+        <tfoot>
+            @if ($income->due_amount > 0)
+                <tr><th scope="row">Sale total</th><td>BDT {{ number_format((float) $income->amount + (float) $income->due_amount, 2) }}</td></tr>
+            @endif
+            <tr><th scope="row">Total paid</th><td><strong>BDT {{ number_format((float) $income->amount, 2) }}</strong></td></tr>
+            @if ($income->due_amount > 0)
+                <tr><th scope="row">Balance due</th><td><strong>BDT {{ number_format((float) $income->due_amount, 2) }}</strong></td></tr>
+            @endif
+        </tfoot>
     </table>
 </main>
 </body>
