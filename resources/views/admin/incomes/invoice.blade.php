@@ -33,7 +33,9 @@
         <div class="invoice-issuer">
             <strong>Uddog Soft Inc.</strong>
             <p>{{ $income->due_amount > 0 ? 'Sale recorded' : 'Paid' }} {{ $income->received_on->format('d M Y') }}</p>
-            <img class="invoice-qr" src="{{ asset('images/uddog-soft-invoice-qr.png') }}" width="104" height="104" alt="QR code for uddog-soft.com">
+            @if ($client->url && preg_match('~^https?://~i', $client->url) && filter_var($client->url, FILTER_VALIDATE_URL))
+                <img class="invoice-qr" src="https://quickchart.io/qr?size=300&amp;text={{ rawurlencode($client->url) }}" width="104" height="104" referrerpolicy="no-referrer" alt="QR code for the client website">
+            @endif
         </div>
     </header>
     <section aria-label="Client details">

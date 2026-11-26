@@ -15,7 +15,7 @@ class AdminIncomeTest extends TestCase
     public function test_client_income_provides_a_printable_invoice_after_saving(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
-        $client = Client::create(['name' => 'Invoice Client', 'is_active' => true]);
+        $client = Client::create(['name' => 'Invoice Client', 'is_active' => true, 'url' => 'https://example.com/shop?a=1&b=2']);
 
         $this->actingAs($admin)->post(route('admin.incomes.store'), [
             'title' => 'Website renewal',
@@ -32,7 +32,7 @@ class AdminIncomeTest extends TestCase
             ->assertSee('Website renewal')
             ->assertSee('BDT 1,234.50')
             ->assertSee('Uddog Soft Inc.')
-            ->assertSee('uddog-soft-invoice-qr.png')
+            ->assertSee('https%3A%2F%2Fexample.com%2Fshop%3Fa%3D1%26b%3D2')
             ->assertSee('BDT 1,734.50')
             ->assertSee('Balance due')
             ->assertSee('BDT 500.00')
