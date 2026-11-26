@@ -46,9 +46,27 @@ class IncomeController extends Controller
         $data = $this->validated($request) + ['created_by' => $request->user()->id];
         $data += $this->attachmentData($request);
 
-        Income::create($data);
+        $income = Income::create($data);
 
-        return redirect()->route('admin.incomes.index')->with('status', 'Income recorded successfully.');
+        $redirect = redirect()->route('admin.incomes.index')->with('status', 'Income recorded successfully.');
+
+        if ($income->client_id !== null) {
+            $redirect->with('invoice_income_id', $income->id);
+        }
+
+        return $redirect;
+    }
+
+    public function invoice(Income $income): View
+    {
+        $client = $income->client()->withTrashed()->first();
+        abort_if($client === null, 404);
+
+        return view('admin.incomes.invoice', [
+            'income' => $income,
+            'client' => $client,
+            'invoiceNumber' => sprintf('INV-%06d', $income->id),
+        ]);
     }
 
     public function edit(Income $income): View

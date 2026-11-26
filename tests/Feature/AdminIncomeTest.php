@@ -12,6 +12,27 @@ class AdminIncomeTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_client_income_provides_a_printable_invoice_after_saving(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+        $client = Client::create(['name' => 'Invoice Client', 'is_active' => true]);
+
+        $this->actingAs($admin)->post(route('admin.incomes.store'), [
+            'title' => 'Website renewal',
+            'amount' => '1234.50',
+            'received_on' => '2026-11-26',
+            'client_id' => $client->id,
+        ])->assertRedirect(route('admin.incomes.index'));
+
+        $income = Income::where('title', 'Website renewal')->firstOrFail();
+        $this->get(route('admin.incomes.index'))->assertSee('Open invoice for the payment you just saved');
+        $this->get(route('admin.incomes.invoice', $income))
+            ->assertSee('Invoice Client')
+            ->assertSee('Website renewal')
+            ->assertSee('BDT 1,234.50')
+            ->assertSee('Print / Save as PDF');
+    }
+
     public function test_income_create_form_offers_category_choices(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
