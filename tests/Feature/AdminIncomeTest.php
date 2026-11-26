@@ -32,6 +32,7 @@ class AdminIncomeTest extends TestCase
             ->assertSee('Website renewal')
             ->assertSee('BDT 1,234.50')
             ->assertSee('Uddog Soft Inc.')
+            ->assertSee('uddog-soft-invoice-qr.png')
             ->assertSee('BDT 1,734.50')
             ->assertSee('Balance due')
             ->assertSee('BDT 500.00')
