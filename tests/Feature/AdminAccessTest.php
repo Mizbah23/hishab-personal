@@ -35,7 +35,7 @@ class AdminAccessTest extends TestCase
             ->assertOk()
             ->assertSee('Financial overview')
             ->assertSee('Total income')
-            ->assertSee('Income (BDT)')
+            ->assertSee('Income vs Expense for Last 6 Months')
             ->assertSee('View exact monthly amounts');
     }
 
