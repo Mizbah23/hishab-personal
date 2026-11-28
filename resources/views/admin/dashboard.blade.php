@@ -11,11 +11,11 @@
     </section>
 
     <section class="stats-grid dashboard-stats" aria-label="Account summary">
-        <article class="stat-card">
-            <div class="stat-icon income-icon">↗</div>
-            <p>Total income</p>
-            <strong>৳ {{ number_format($income, 2) }}</strong>
-            <span class="stat-note">All recorded income</span>
+        <article class="stat-card balance-card">
+            <div class="stat-icon balance-icon">=</div>
+            <p>Net balance</p>
+            <strong>৳ {{ number_format($balance, 2) }}</strong>
+            <span class="stat-note">Income minus expenses</span>
         </article>
         <article class="stat-card">
             <div class="stat-icon expense-icon">↘</div>
@@ -23,11 +23,11 @@
             <strong>৳ {{ number_format($expense, 2) }}</strong>
             <span class="stat-note">All recorded expenses</span>
         </article>
-        <article class="stat-card balance-card">
-            <div class="stat-icon balance-icon">=</div>
-            <p>Net balance</p>
-            <strong>৳ {{ number_format($balance, 2) }}</strong>
-            <span class="stat-note">Income minus expenses</span>
+        <article class="stat-card">
+            <div class="stat-icon income-icon">↗</div>
+            <p>Total income</p>
+            <strong>৳ {{ number_format($income, 2) }}</strong>
+            <span class="stat-note">All recorded income</span>
         </article>
         <article class="stat-card">
             <div class="stat-icon client-icon">◎</div>
@@ -45,16 +45,10 @@
 
     @php
         $barPeak = max(1, $recentMonths->max(fn ($month) => max($month['income'], $month['expense'], abs($month['net']))));
-        $targetStep = max(1, $yearIncome->max('amount') / 5);
+        $targetStep = max(1, $comparisonMonths->max(fn ($month) => max($month['income'], $month['expense'])) / 5);
         $magnitude = 10 ** floor(log10($targetStep));
         $lineStep = ceil($targetStep / $magnitude) * $magnitude;
         $linePeak = $lineStep * 5;
-        $linePoints = $yearIncome->values()->map(fn ($point, $index) => [
-            ...$point,
-            'x' => 80 + $index * 48,
-            'y' => 225 - $point['amount'] / $linePeak * 180,
-        ]);
-        $linePath = $linePoints->map(fn ($point) => $point['x'].','.$point['y'])->implode(' ');
     @endphp
     <section class="dashboard-columns financial-charts">
         <article class="content-card">
@@ -70,25 +64,48 @@
             </div>
         </article>
         <article class="content-card annual-income-card">
-            <div class="card-header"><div><span class="panel-kicker">Monthly income</span><h3>{{ $chartYear }} income</h3></div><strong>৳ {{ number_format($yearIncome->sum('amount'), 2) }}</strong></div>
-            <div class="income-line-scroll" tabindex="0" role="region" aria-label="Monthly income chart">
-                <svg class="income-line" viewBox="0 0 640 260" role="img" aria-label="Current year monthly income line chart in BDT">
-                    <defs><linearGradient id="annual-income-fill" x2="0" y2="1"><stop stop-color="#5ba98b" stop-opacity=".29"/><stop offset="100%" stop-color="#5ba98b" stop-opacity=".02"/></linearGradient></defs>
-                    <text x="80" y="22" class="income-axis-label">Income (BDT)</text>
+            <div class="card-header"><h3>Income vs Expense for Last 6 Months</h3></div>
+            <div class="income-line-scroll" tabindex="0" role="region" aria-label="Six-month income and expense chart">
+                <svg class="income-line" viewBox="0 0 640 260" role="img" aria-label="Monthly income and expenses in BDT">
+                    <text x="100" y="22" class="income-axis-label">Amount (BDT)</text>
                     @for ($tick = 0; $tick <= 5; $tick++)
-                        <line x1="75" y1="{{ 225 - 36 * $tick }}" x2="608" y2="{{ 225 - 36 * $tick }}" class="income-gridline" />
-                        <text x="68" y="{{ 225 - 36 * $tick }}" text-anchor="end" dominant-baseline="middle" class="income-axis-label">{{ number_format($tick * $lineStep) }}</text>
+                        <line x1="95" y1="{{ 225 - 36 * $tick }}" x2="608" y2="{{ 225 - 36 * $tick }}" class="income-gridline" />
+                        <text x="90" y="{{ 225 - 36 * $tick }}" text-anchor="end" dominant-baseline="middle" class="income-axis-label">৳{{ number_format($tick * $lineStep) }}</text>
                     @endfor
-                    <path d="M80 45 V225 H608" class="income-axis" />
-                    <polygon points="80,225 {{ $linePath }} 608,225" fill="url(#annual-income-fill)" />
-                    <polyline fill="none" stroke="#267657" stroke-width="3" stroke-linejoin="round" points="{{ $linePath }}" />
-                    @foreach ($linePoints as $point)
-                        <circle cx="{{ $point['x'] }}" cy="{{ $point['y'] }}" r="4.5" fill="#267657" stroke="white" stroke-width="2"><title>{{ $point['label'] }}: ৳ {{ number_format($point['amount'], 2) }}</title></circle>
-                        <text x="{{ $point['x'] }}" y="248" text-anchor="middle" class="income-axis-label">{{ $point['label'] }}</text>
+                    @foreach (['income' => '#0eaa65', 'expense' => '#e86c28'] as $series => $color)
+                        @php
+                            $points = $comparisonMonths->map(fn ($month, $index) => [
+                                'x' => 100 + $index * 100,
+                                'y' => 225 - $month[$series] / $linePeak * 180,
+                            ]);
+                            $path = 'M '.$points[0]['x'].' '.$points[0]['y'];
+                            for ($index = 1; $index < $points->count(); $index++) {
+                                $previous = $points[$index - 1];
+                                $point = $points[$index];
+                                $middle = ($previous['x'] + $point['x']) / 2;
+                                $path .= " C {$middle} {$previous['y']} {$middle} {$point['y']} {$point['x']} {$point['y']}";
+                            }
+                        @endphp
+                        <path d="{{ $path }} L600 225 H100 Z" fill="{{ $color }}" opacity=".06" />
+                        <path d="{{ $path }}" fill="none" stroke="{{ $color }}" stroke-width="3" />
+                        @foreach ($points as $index => $point)
+                            <circle cx="{{ $point['x'] }}" cy="{{ $point['y'] }}" r="3" fill="{{ $color }}"><title>{{ $comparisonMonths[$index]['label'] }} {{ ucfirst($series) }}: ৳{{ number_format($comparisonMonths[$index][$series], 2) }}</title></circle>
+                        @endforeach
+                    @endforeach
+                    @foreach ($comparisonMonths as $month)
+                        <text x="{{ 100 + $loop->index * 100 }}" y="248" text-anchor="middle" class="income-axis-label">{{ $month['label'] }}</text>
                     @endforeach
                 </svg>
             </div>
-            <details><summary>View exact monthly amounts</summary><div class="income-month-values">@foreach ($yearIncome as $point)<span>{{ $point['label'] }}: ৳ {{ number_format($point['amount'], 2) }}</span>@endforeach</div></details>
+            <div class="chart-legend comparison-legend"><i class="legend-income"></i> Income <i class="legend-expense"></i> Expense</div>
+            <details>
+                <summary>View exact monthly amounts</summary>
+                <div class="income-month-values">
+                    @foreach ($comparisonMonths as $month)
+                        <span>{{ $month['label'] }} · Income ৳{{ number_format($month['income'], 2) }} · Expense ৳{{ number_format($month['expense'], 2) }}</span>
+                    @endforeach
+                </div>
+            </details>
         </article>
     </section>
     <section class="dashboard-columns">
